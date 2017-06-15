@@ -31,6 +31,12 @@ EC_2.3.4.5.fasta
 
 ```
 [clustering]
+# A name to identify the clustering process into the relational database.
+label = my_own_label
+
+# A name to identify the author of the clustering process (optional).
+author = martinclaypool
+
 # Where clusperin expects the Fasta files.
 ec_files = /var/kegg/clustering/
 
@@ -73,6 +79,12 @@ python setup.py install
 
 ```
 [clustering]
+# A name to identify the clustering process into the relational database.
+label = my_own_label
+
+# A name to identify the author of the clustering process (optional).
+author = martinclaypool
+
 # Where clusperin expects the Fasta files.
 ec_files = /var/kegg/clustering/
 
