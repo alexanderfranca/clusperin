@@ -2,7 +2,6 @@ import re
 import os
 import sys
 from collections import defaultdict
-from sqlalchemy.sql import func
 import time
 import decimal
 import datetime
@@ -15,21 +14,29 @@ import logging.handlers
 from Config import *
 from AnendbFileSystem import *
 
-result   = defaultdict(dict)
-clusters = defaultdict(dict)
-finalClusters = defaultdict(dict)
-proteinStack = list()
 
-
-class AnenpiClusteringMethod():
+class Clusperin():
+    """
+    Check configurations, required softwares and run the clustering of EC numbers Fasta files.
+    """
 
     # This class is about generating this dictionary and files from it.
     result = defaultdict(dict)
 
+    clusters = defaultdict(dict)
+    finalClusters = defaultdict(dict)
+    proteinStack = list()
+
     def __init__( self ):
 
+        # -------------------------------------------------------------------------------- #
+        # This class is completely useless if there's no correct configurations set.       #
+        # And it's correct and best not to run without it.                                 #
+        # -------------------------------------------------------------------------------- #
         # Configuration options system.
         self.config = Config()
+        self.config.loadConfiguration()
+        self.conf = self.config.getConfigurations()
 
         # File system helper.
         self.afs    = AnendbFileSystem()
@@ -64,98 +71,28 @@ class AnenpiClusteringMethod():
         self.log = log
 
 
-    def printConfigurationFileExample( self ):
 
-        print( "\n" )
-        print( "Here's an example of .anendb.conf file." )
-        print( "You should put this file in your home directory. ")
-        print( "If your home directory is /home/claypool , you create your file as: " )
-        print( "/home/claypool/.anendb.conf" )
-        print( "-------------------------------------------------------------------------" )
-        print( "[clustering]" )
-        print( "ec_files = /var/kegg/clustering/" )
-        print( "cluster_files = /var/kegg/clustering/clusters/" )
-        print( "" )
-        print( "[log]" )
-        print( "log_file = /var/kegg/clustering/clustering.log" )
-        print( "-------------------------------------------------------------------------" )
-
-
-    def isConfigurationsCorrect( self ):
-        """
-        Doesn't allow the clustering process without the correct configurations available.
-
-        """
-
-        errors = 0
-
-        # Check configuration file.
-        expectedClusteringOptions  = [ 'ec_files', 'cluster_files' ]
-        expectedLogOptions = [ 'log_file' ]
-
-        if not self.conf.has_section( 'clustering' ):
-            print( "ERROR: The anendb.conf section 'clustering' wasn't found!" )
-            self.printConfigurationFileExample()
-            sys.exit()
-
-        if not self.conf.has_section( 'log' ):
-            print( "ERROR: The anendb.conf section 'log' wasn't found!" )
-            self.printConfigurationFileExample()
-            sys.exit()
-
-
-        for option in expectedClusteringOptions:
-            if not self.conf.has_option( 'clustering', option ):
-                print( "ERROR: The anendb.conf option '" + str(option) + "' in the 'clustering' section wasn't found!" )
-                errors += 1
-
-        for option in expectedLogOptions:
-            if not self.conf.has_option( 'log', option ):
-                print( "ERROR: The anendb.conf option '" + str(option) + "' in the 'log' section wasn't found!" )
-                errors += 1
-
-
-
-
-        # Check blast exists.
-        command = 'makeblastdb -help'
-
-        result = subprocess.call( command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-        # Zero means (from the subprocess package) the command could be executed without errors.
-        if not result == 0:
-            pprint.pprint( result )
-            print( "Software 'makeblastdb' wasn't found. Probably you don't have BLAST installed." )
-            print( "Install BLAST before running this clustering process.")
-            sys.exit()
-
-        command = 'blastp -help'
-
-        result = subprocess.call( command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-        # Zero means (from the subprocess package) the command could be executed without errors.
-        if not result == 0:
-            print( "Software 'blastp' wasn't found. Probably you don't have BLAST installed." )
-            print( "Install BLAST before running this clustering process.")
-            sys.exit()
-
-
-        if errors > 0:
-            self.printConfigurationFileExample()
-            sys.exit()
-        else:
-            return True
-
-
-
-    # TODO: test, comment
     def getDestination( self ):
+        """
+        Returns the configuration that tells where to store result files and where is the EC number Fasta files to be processed.
+
+        Returns:
+            (str): Path where this class does its job.
+
+        """
 
         return self.getConfiguration( 'clustering', 'ec_files' )
 
 
-    # TODO: test, comment
     def getTrackingFilePath( self ):
+        """
+        Returns the path where is the clusteringTracking file.
+
+        In other words, the file that stores all the EC numbers files that this class should cluster.
+
+        Returns:
+            (str): Full path for the tracking file.
+        """
 
         destination = self.getDestination()
 
@@ -163,14 +100,34 @@ class AnenpiClusteringMethod():
 
 
 
-    # TODO: test, comment
     def getFileNameFromList( self, name=None ):
+        """
+        Remove the path from a full path file name.
+
+        It have the same effect as using 'basename' shell command.
+
+        Args:
+            name(str): A full file name path.
+
+        Returns:
+            (str): The file name from the path.
+
+        """
 
         return self.afs.getFileName( name )
 
 
-    # TODO: test, comment
     def getEcNumberFromFileName( self, file_name=None ):
+        """
+        Returns the flat EC number from a Fasta file name.
+
+        Args:
+            file_name(str): A Fasta file name. Ex: EC_1.2.34.3.fasta.
+
+        Returns:
+            (str): The EC number without any prefix or sufix. For the example above, the result would be: '1.2.34.3'.
+
+        """
 
         ecNumber = re.sub( '^EC_', '', file_name )
         ecNumber = re.sub( '\.fasta', '', ecNumber )
@@ -179,10 +136,17 @@ class AnenpiClusteringMethod():
         return ecNumber
 
 
-    # TODO: test, comment
     def createTrackingFile( self ):
         """
         Create, if it doesn't exist, the tracking file for the clustering.
+
+        This file actual isn't useful unless you need to know what is the list of 
+
+        EC numbers that should be clustered.
+
+        There's no process in this class that really depends on this tracking file.
+
+        But... that's important to keep the list of what should be done by Clusperin.
 
         """
 
@@ -204,11 +168,6 @@ class AnenpiClusteringMethod():
 
             f.close()
 
-
-    # TODO: test, comment
-    def getTrackingFile( self ):
-
-        destination 
 
     def setConfigurationFile( self, conf_file=None ):
         """
@@ -240,41 +199,19 @@ class AnenpiClusteringMethod():
         return self.conf.get( section, value )
 
 
-
-    def setTrackingFile(self, trackingFile):
-        pass
-
-    def setCutoff( self, cutoff ):
-        pass
-
-
-    def getEcBlastResultFileName( self, ecNumber ):
-        """
-        Concatenates an string using the EC Number and
-        the extension '.blastall'
-        """
-        return str(ecNumber) + ".blastall"
-
-
-    def getBlastallResultFile( self, ecNumber):
-        """
-        Returns a file handle representing
-        the file where the results of blast
-        command are stored.    
-        """
-
-        fileName = self.getEcBlastResultFileName( ecNumber )
-        blastAllFile = open( self.processingFilesDirectory + '/' + fileName, 'r')
-
-        return blastAllFile
-
-
-    def similaritiesPgsqlInserts(self, proteinDataList, ecNumber):
-        pass
-
-
-    # TODO: test, comment
     def blastProteins( self, ec_file=None ):
+        """
+        Execute BLAST software to generate the similarity results.
+
+        Also, and most important, create the dictionary with the hits that fits in the cutoff/score parameter.
+
+        Args:
+            ec_file(str): Path for the EC file to be processed.
+
+        Results:
+            (dict): 'result' is the proteins that fit in the specified score/cutoff.
+
+        """
 
         ecFile = ec_file
 
@@ -326,7 +263,8 @@ class AnenpiClusteringMethod():
 
             # Most critical element of the whole method:
             # point where the score value is actually determined/tested
-            if score >= 120:
+            systemScore = self.getConfiguration( 'clustering', 'cutoff' )
+            if score >= systemScore:
                 result[query][subject] = 1
 
                 # line added bellow: that's the same effect produced by the balanceHash method, but without the long and overheading 'ifs'.
@@ -337,15 +275,22 @@ class AnenpiClusteringMethod():
         return result
 
 
-    # That's a key function for the clusterization.
+    # That's a key function for the clustering.
     # It takes the values of an specific key of the graph
     # and append to an stack.
-    # That stack is where the clusterization will iterate
+    # That stack is where the clustering will iterate
     # to specify what cluster a protein belongs to.
     def getlist( self, proteinStack=None, result=None ): 
         """
         Append to an stack a list of values from a key of a graph.
-        **Returns** a list.
+
+        Args:
+            proteinStack(list): List of protein identifications.
+            result(dict): Result created until this moment.
+
+        Returns:
+            (list): A new protein stack that now acomplish the new data from 'result'.
+
         """
 
         for key in result.keys():
@@ -355,8 +300,14 @@ class AnenpiClusteringMethod():
         return proteinStack
 
 
-    # TODO: test, comment
     def clusterProteins( self, blastResult=None ):
+        """
+        Actual group/cluster the proteins, write the data into the cluster file and mark the EC file as done.
+
+        Args:
+            blastResult(dict): The proteins result to be grouped.
+
+        """
 
         clusterNumber = 0
         proteinStack = list()
@@ -450,15 +401,17 @@ class AnenpiClusteringMethod():
         self.log.info( "DONE Generating cluster files: " + self.currentEcFile )
 
         # Mark the clustering as done.
-
         self.markClusteringDone()
 
         self.log.info( "Clustering file marked as DONE: " + self.currentEcFile )
 
 
 
-    # TODO: test, comment
     def galperinAnalysis(self, ec_file=None ):
+        """
+        Call the BLAST software and call the actual clustering method.
+
+        """
 
         self.log.info( "Start blasting process for: " + ec_file )
         
@@ -476,7 +429,10 @@ class AnenpiClusteringMethod():
 
     def generateClusters( self ):
         """
-        Executes the analysis
+        Walk through the directory files and call the 'galperingAnalysis' method.
+
+        It also check if the file to be processed was already processed.
+
         """
 
         trackingFile = self.getTrackingFilePath()
@@ -489,48 +445,64 @@ class AnenpiClusteringMethod():
 
         files = glob.glob( filesDirectory + '/' + '*.fasta' )
 
+        self.totalOfFiles = len(files)
+
+        self.log.info( "Total of " + str( self.totalOfFiles ) + " will be processed." )
+
+        counter = 1
+
         for ecFile in files:
 
+            self.log.info( "Processing " + str(counter) + " of " + str(self.totalOfFiles) + " total files." )
+            counter += 1
+
+            ecFileName = self.afs.getFileName( ecFile )
+
             # Only execute clustering if it wasn't run (and done) before.
-            if not ecFile in doneFiles:
+            if not ecFileName in doneFiles:
                 self.currentEcFile = self.afs.getFileName( ecFile )
 
                 self.log.info( "Going to cluster: " + ecFile )
 
                 self.galperinAnalysis( ecFile )
             else:
-                self.log.info( "File was already clustered: " + ecFile )
+                self.log.info( "File SKIPED. It was already clustered: " + ecFile )
 
 
-    def executeAnalysis(self, fromScratch=None, ec=None):
+    def executeAnalysis( self ):
         """
-        Executes the analysis
+        Executes the analysis.
+
+        This is the main method that call all other auxiliary clustering methods.
         """
 
+        self.createLogSystem()
 
-        if self.isConfigurationsCorrect():
+        self.log.info( "START ANALYSIS." )
 
-            self.createLogSystem()
+        clusterDestination = self.getDestination()
 
-            self.log.info( "START ANALYSIS." )
+        self.log.info( "EC files are in: " + clusterDestination )
 
-            clusterDestination = self.getDestination()
+        if not self.afs.isDirectory( clusterDestination ):
+            os.mkdir( clusterDestination )
 
-            self.log.info( "EC files are in: " + clusterDestination )
-
-            if not self.afs.isDirectory( clusterDestination ):
-                os.mkdir( clusterDestination )
-
-            self.generateClusters()
+        self.generateClusters()
 
         self.log.info( "DONE ANALYSIS." )
 
 
     def getDoneFilesList( self ):
+        """
+        Read the 'done_files' and return it files list.
+
+        Returns:
+            (list): List of file names.
+        """
 
         finished = []
 
-        clusterDestination = self.getConfiguration( 'clustering', 'cluster_files' )
+        clusterDestination = self.getConfiguration( 'clustering', 'ec_files' )
 
         doneFiles = clusterDestination + '/' + 'done_files'
 
@@ -538,6 +510,8 @@ class AnenpiClusteringMethod():
             f = open( doneFiles )
 
             for line in f:
+                # Remove newline
+                line = line.rstrip('\r\n')
                 finished.append( line )
 
             f.close()
@@ -546,6 +520,12 @@ class AnenpiClusteringMethod():
 
 
     def markClusteringDone( self ):
+        """
+        Write the processed EC number into the 'done_files'.
+
+        This file keep tracking of what was already done.
+
+        """
 
         doneFile = self.getDestination() + '/' + 'done_files'
         f = open( doneFile, 'a' )
@@ -554,6 +534,13 @@ class AnenpiClusteringMethod():
 
 
     def purgeTemporaryFiles( self, ec_file=None ):
+        """
+        Remove temporary BLAST files. Files that ends with .phr, .pin, .psq and .blastall.
+
+        This method is used when a clustering is interrupted for some reason and old processed files 
+
+        have to be removed: We have to make sure a whole clustering process was executed neat and clean. 
+        """
 
         destinationDirectory = self.getConfiguration( 'clustering', 'cluster_files' )
 
@@ -572,8 +559,10 @@ class AnenpiClusteringMethod():
                 self.afs.removeFile( fileToRemove )
 
 
-    # TODO: test, comment
     def purgeClusterFile( self, file_to_purge=None ):
+        """
+        Remove file.
+        """
 
         self.afs.removeFile( file_to_purge )
 

@@ -5,12 +5,13 @@ from os.path import expanduser
 from AnendbFileSystem import *
 from pkg_resources import get_distribution
 import re
+import subprocess
 import sys
 
 
 class Config:
     """
-    Loads, check consistency and offer configuration parameters from the anendb.conf file.
+    Loads, check consistency and offer configuration parameters from the clusperin.conf file.
     """
 
     conf = None
@@ -21,18 +22,22 @@ class Config:
 
         self.afs = AnendbFileSystem()
 
-        self.expectedConfigs = { 'files': [ 'empty' ], 'directories': [ 'inserts' ] }
+        # This is not being used... why?
+        self.expectedConfigs = { 'clustering': [ 'ec_files', 'cluster_files', 'cutoff' ], 'log': [ 'log_file' ] }
 
 
     def loadConfiguration( self ):
         """
-        Load the configurations from the anendb.conf file.
+        Load the configurations from the clusperin.conf file.
         """
 
         self.conf = configparser.ConfigParser()
 
         if not self.getConfigurationFile():
-            confFile = './conf/anendb.conf' 
+
+            myPlace = expanduser("~")
+
+            confFile = myPlace + '/.clusperin.conf' 
             self.setConfigurationFile( confFile )
         else:
             confFile = self.getConfigurationFile()
@@ -40,13 +45,18 @@ class Config:
         # Actual read the configurations.
         self.conf.read( confFile )
 
+        if self.existsConfigurationFile( confFile ):
+            self.checkConfigurationFile( confFile )
+        else:
+            return False
+
 
     def setConfigurationFile( self, conf_file=None ):
         """
-        Set the current anendb.conf file.
+        Set the current clusperin.conf file.
 
         Args:
-            conf_file(str): Full path for the anendb.conf
+            conf_file(str): Full path for the clusperin.conf
         
         """
 
@@ -65,7 +75,7 @@ class Config:
             {'Author': 'Franca AF (Alexander da Franca Fernandes)',
              'Author-email': 'alexander@francafernandes.com.br',
              'Description': 'KeggReader helps to deal with KEGG local files',
-             'Home-page': 'http://www.sitemaldito.com.br/anendb',
+             'Home-page': 'http://www.sitemaldito.com.br/clusperin,
              'License': 'BSD',
              'Metadata-Version': '1.0',
              'Name': 'KeggReader',
@@ -79,7 +89,7 @@ class Config:
         """
         pkgData = {}
 
-        pkgInfo = get_distribution('anendb').get_metadata('PKG-INFO')
+        pkgInfo = get_distribution('clusperin').get_metadata('PKG-INFO')
 
         rawData = pkgInfo.split("\n")
         rawData.pop()
@@ -100,7 +110,7 @@ class Config:
         """
         Check if the configuration file exists.
 
-        If not, print error message because KeggReader depends on at least one anendb.conf file.
+        If not, print error message because KeggReader depends on at least one clusperin.conf file.
 
         Args:
             conf_file(str): Full path for the configuration file.
@@ -115,8 +125,8 @@ class Config:
             print( "\n\n" )
             print( '------------------------------------------------------------------------------' )
             print( 'ERROR: Configuration file not found: ' + conf_file )
-            print( 'Take a look at the documentation to know how to create anendb.conf file.' )
-            print( 'NOTHING, NONE, WILL WORK WITHOUT anendb.conf file.' )
+            print( 'Take a look at the documentation to know how to create clusperin.conf file.' )
+            print( 'NOTHING, NONE, WILL WORK WITHOUT clusperin.conf file.' )
 
             pkgData = self.getPackageInfo()
 
@@ -151,4 +161,143 @@ class Config:
         """
 
         return self.conf
+
+
+    def checkConfigurationFile( self, conf_file=None ):
+        """
+        Check if the configuration file is well formed.
+
+        It means the file have all the required sections, options and make sure the option values actual exists.
+
+        This method print an complete error summary in case the file is not well formated.
+
+        Args:
+            conf_file(str): Full path for the configuration file.
+
+        """
+    
+        # This is a very flat code...
+        # That's because there's very few options in the file.
+        # Feel free to improve the 'smartness' of this code.
+        # --------------------------------------------------------
+        # Update: that's grew up a little bit, hum? 
+        #         better make it better...
+        # --------------------------------------------------------
+
+        # To store what is missing.
+        notFoundSection = []
+        notFoundOptions = []
+
+        # Check option one by one.
+        if not self.conf.has_section( 'clustering' ):
+            notFoundSection.append( 'clustering' )
+
+        if not self.conf.has_section( 'log' ):
+            notFoundSection.append( 'log' )
+
+        if not self.conf.has_option( 'clustering', 'ec_files' ):
+                notFoundOptions.append( 'clustering -> ec_files'  )
+
+        if not self.conf.has_option( 'clustering', 'cluster_files' ):
+                notFoundOptions.append( 'clustering -> cluster_files'  )
+
+        if not self.conf.has_option( 'clustering', 'cutoff' ):
+                notFoundOptions.append( 'clustering -> cutoff'  )
+
+        if not self.conf.has_option( 'log', 'log_file' ):
+                notFoundOptions.append( 'log -> log_file'  )
+
+        # Check if the 'cluster_files' directory actual exists in the file system.
+        if self.conf.has_option( 'clustering', 'cluster_files' ):
+            directory = self.conf.get('clustering', 'cluster_files') 
+            if not self.afs.isDirectory( directory ):
+                    os.mkdir( directory ) 
+
+
+        # Check necessary software.
+        command = 'makeblastdb -help'
+
+        result = subprocess.call( command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        # Zero means (from the subprocess package) the command could be executed without errors.
+        if not result == 0:
+            print( "Software 'makeblastdb' wasn't found. Probably you don't have BLAST installed." )
+            print( "Install BLAST before running this clustering process.")
+            sys.exit()
+
+        command = 'blastp -help'
+
+        result = subprocess.call( command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        # Zero means (from the subprocess package) the command could be executed without errors.
+        if not result == 0:
+            print( "Software 'blastp' wasn't found. Probably you don't have BLAST installed." )
+            print( "Install BLAST before running this clustering process.")
+            sys.exit()
+
+
+
+        if len( notFoundSection ) > 0 or len( notFoundOptions ) > 0:
+            self.printConfigurationFileErrorMessage(notFoundSection, notFoundOptions)
+            sys.exit()
+
+
+    def printConfigurationFileErrorMessage( self, not_found_sections=None, not_found_options=None ):
+        """
+        Print an summary of errors found in the configuration file.
+
+        Args:
+            not_found_sections(list): Not found required sections in the file.
+            not_found_files_options(list): Not found required options in the 'files' section.
+            not_found_files(list): Not found actual files set in the 'files' section.
+            not_found_directories_options(list): Not found required directories options in the 'directories' section.
+            not_found_directories(list): Not found actual directories set in the 'directories' section.
+
+        """
+
+        print( '------------------------------------------------------------------------------' )
+        print( "--- ERROR ---" )
+        print( "Please, create a proper .clusperin.conf file, with all the required sections, ")
+        print( "all the required options and with valid files and directories.")
+        print( "\n")
+        print( "--- What is wrong in your file ---" )
+        if len(not_found_sections) > 0:
+            print( 'Not found config sections: ')
+            for section in not_found_sections:
+                print( '    ' + section )
+
+        if len(not_found_options) > 0:
+            print( 'Not found config options: ' )
+            for option in not_found_options:
+                print( '    ' + option )
+
+        pkgData = self.getPackageInfo()
+
+        print( "\n" )
+        print( 'Read the documentation in the link below: ' )
+        print( pkgData['Home-page'] + '/documentation' )
+        print( '------------------------------------------------------------------------------' )
+
+        print( "\n" )
+        self.printConfigurationFileExample()
+
+
+    def printConfigurationFileExample( self ):
+
+        print( "\n" )
+        print( "Here's an example of .clusperin.conf file." )
+        print( "You should put this file in your home directory. ")
+        print( "If your home directory is /home/claypool , you create your file as: " )
+        print( "/home/claypool/.clusperin.conf" )
+        print( "-------------------------------------------------------------------------" )
+        print( "[clustering]" )
+        print( "ec_files = /var/kegg/clustering/" )
+        print( "cluster_files = /var/kegg/clustering/clusters/" )
+        print( "cutoff = 120" )
+        print( "" )
+        print( "[log]" )
+        print( "log_file = /var/kegg/clustering/clustering.log" )
+        print( "-------------------------------------------------------------------------" )
+
+
 

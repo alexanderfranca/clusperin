@@ -11,19 +11,14 @@ setup(
     license='BSD',
     description='Tool to cluster proteins.',
     long_description='Tool to cluster proteins using Galpering method.',
+    scripts=['bin/clusperin'],
     packages=[ 'clusperin' ],
     platforms='Linux',
     url='http://bioinfoteam.fiocruz.br/clusperin',
     install_requires=[
             'configparser',
             'datetime ',
-            'glob',
-            'os',
             'pprint',
-            're',
-            'shutil',
-            'sys',
-            'unittest',
             ],
 )
 
