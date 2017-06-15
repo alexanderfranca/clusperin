@@ -23,7 +23,7 @@ class Config:
         self.afs = AnendbFileSystem()
 
         # This is not being used... why?
-        self.expectedConfigs = { 'clustering': [ 'ec_files', 'cluster_files', 'cutoff' ], 'log': [ 'log_file' ] }
+        self.expectedConfigs = { 'clustering': [ 'ec_files', 'cluster_files', 'cutoff', 'label' ], 'log': [ 'log_file' ] }
 
 
     def loadConfiguration( self ):
@@ -198,6 +198,9 @@ class Config:
         if not self.conf.has_option( 'clustering', 'ec_files' ):
                 notFoundOptions.append( 'clustering -> ec_files'  )
 
+        if not self.conf.has_option( 'clustering', 'label' ):
+                notFoundOptions.append( 'clustering -> label'  )
+
         if not self.conf.has_option( 'clustering', 'cluster_files' ):
                 notFoundOptions.append( 'clustering -> cluster_files'  )
 
@@ -291,6 +294,7 @@ class Config:
         print( "/home/claypool/.clusperin.conf" )
         print( "-------------------------------------------------------------------------" )
         print( "[clustering]" )
+        print( "label = jameshetfield" )
         print( "ec_files = /var/kegg/clustering/" )
         print( "cluster_files = /var/kegg/clustering/clusters/" )
         print( "cutoff = 120" )
