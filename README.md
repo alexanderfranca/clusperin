@@ -50,7 +50,7 @@ log_file = /var/kegg/clustering/clustering.log
 
 ## Requirements
 
-* BLAST software: [Download](ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/). That's the software that actual make the similarity analysis.
+* BLAST software: Download: ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/. That's the software that actual make the similarity analysis.
 * A proper configuration file **.clusperin.conf** in your $HOME directory.
 
 
