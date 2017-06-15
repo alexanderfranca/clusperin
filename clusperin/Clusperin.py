@@ -20,14 +20,13 @@ class Clusperin():
     Check configurations, required softwares and run the clustering of EC numbers Fasta files.
     """
 
-    # This class is about generating this dictionary and files from it.
-    result = defaultdict(dict)
-
-    clusters = defaultdict(dict)
-    finalClusters = defaultdict(dict)
-    proteinStack = list()
 
     def __init__( self ):
+        # This class is about generating this dictionary and files from it.
+        self.result = defaultdict(dict)
+        #clusters = defaultdict(dict)
+        #finalClusters = defaultdict(dict)
+        #proteinStack = list()
 
         # -------------------------------------------------------------------------------- #
         # This class is completely useless if there's no correct configurations set.       #
@@ -265,14 +264,14 @@ class Clusperin():
             # point where the score value is actually determined/tested
             systemScore = self.getConfiguration( 'clustering', 'cutoff' )
             if score >= systemScore:
-                result[query][subject] = 1
+                self.result[query][subject] = 1
 
                 # line added bellow: that's the same effect produced by the balanceHash method, but without the long and overheading 'ifs'.
-                result[subject][query] = 1
+                self.result[subject][query] = 1
 
         self.log.info( "DONE reading BLAST results: " + ecFile )
 
-        return result
+        return self.result
 
 
     # That's a key function for the clustering.
@@ -478,6 +477,8 @@ class Clusperin():
 
         self.createLogSystem()
 
+        self.writeMetada()
+
         self.log.info( "START ANALYSIS." )
 
         clusterDestination = self.getDestination()
@@ -567,5 +568,31 @@ class Clusperin():
         self.afs.removeFile( file_to_purge )
 
 
+    def writeMetada( self ):
+        """
+        This is one of the most important methods.
 
+        Metadata file have to be written since that data will be used as a mark for future relational database insertions.
+
+        Without metadata the relational database wouldn't be able to know what clustering method was used.
+
+        """
+
+        metadataFile = self.getDestination() + '/' + 'clustering_metadata'
+
+        f = open( metadataFile, 'w' )
+
+        label = self.getConfiguration( 'clustering', 'label' )
+
+        f.write( 'label = ' + str(label) + "\n" )
+        f.write( 'date = ' + str( datetime.datetime.now() ) + "\n" )
+
+        if self.conf.has_option( 'clustering', 'author' ):
+            author = self.getConfiguration( 'clustering', 'author' )
+        else:
+            author = 'anonymous'
+
+        f.write( 'author = ' + str(author) + "\n" )
+
+        f.close()
 
