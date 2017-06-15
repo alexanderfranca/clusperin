@@ -1,0 +1,19 @@
+#!/usr/bin/python
+
+# ---------------------------------------------- #
+# This script only calls the actual method       #
+# that exeuctes the analysis.                    #
+#                                                #
+# IF your configuration file is set correctly    #
+# AND if your files are ok, all the process      #
+# should run fine and properly.                  #
+# ---------------------------------------------- #
+
+# Import clusperin package
+from clusperin import *
+
+# Load Clusperin.
+c = Clusperin()
+
+# Execute the clustering.
+c.executeAnalysis()
