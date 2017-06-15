@@ -235,7 +235,6 @@ class Clusperin():
         blastCsv = open( ecBlastResultFileName )
         blastallResultFileCSV = csv.reader( blastCsv , delimiter='\t' )
 
-
         self.log.info( "Reading BLAST results: " + ecFile )
 
         for line in blastallResultFileCSV:
@@ -263,7 +262,7 @@ class Clusperin():
             # Most critical element of the whole method:
             # point where the score value is actually determined/tested
             systemScore = self.getConfiguration( 'clustering', 'cutoff' )
-            if score >= systemScore:
+            if score >= int(systemScore):
                 self.result[query][subject] = 1
 
                 # line added bellow: that's the same effect produced by the balanceHash method, but without the long and overheading 'ifs'.
