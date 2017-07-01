@@ -1,19 +1,34 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
-# ---------------------------------------------- #
-# This script only calls the actual method       #
-# that exeuctes the analysis.                    #
-#                                                #
-# IF your configuration file is set correctly    #
-# AND if your files are ok, all the process      #
-# should run fine and properly.                  #
-# ---------------------------------------------- #
+import os
+import sys
+import argparse
 
-# Import clusperin package
+parseargs = argparse.ArgumentParser(description="Cluster BLAST results from AnEnDB.")
+parseargs.add_argument('--source-directory', help="Full path to where you have the BLAST result files.", required=True)
+parseargs.add_argument('--destination-directory', help="Full path to where to put the clustering results.", required=True)
+parseargs.add_argument('--cutoff', help="Value to use as grouping/clustering proteins.", required=True)
+parseargs.add_argument('--label', help="Name to call your clustering.", required=True)
+parseargs.add_argument('--author', help="Author's name for this clustering.", required=True)
+parseargs.add_argument('--log-file', help="Full path (including the file name) to the log file.", required=True)
+args = parseargs.parse_args()
+
+if not os.access(args.log_file, os.W_OK):
+    print( "ERROR: You don't have permission to write the file: " + args.log_file )
+    sys.exit()
+
+if not os.access(args.source_directory, os.R_OK):
+    print( "ERROR: You don't have permission to read the directory: " + args.source_directory)
+    sys.exit()
+
+if not os.access(args.destination_directory, os.W_OK):
+    print( "ERROR: You don't have permission to write into the directory OR the directory doesn't exist: " + args.destination_directory)
+    sys.exit()
+
+
 from clusperin import *
 
-# Load Clusperin.
-c = Clusperin()
+c = Clusperin(args.source_directory, args.destination_directory, args.cutoff, args.label, args.author, args.log_file)
 
 # Execute the clustering.
-c.executeAnalysis()
+c.execute_analysis()

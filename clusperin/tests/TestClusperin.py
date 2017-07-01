@@ -7,35 +7,20 @@ import re
 
 
 # TODO: This class have to be in fact implemented.
-class TestClusperin( unittest.TestCase ):
+class TestClusperin(unittest.TestCase):
 
     def setUp( self ):
-        self.cl = Clusperin()
+        self.cl = Clusperin(log_file='/var/log/cluspering.log', 
+                destination_directory='/var/kegg/clustering/clusters/',
+                source_directory='/var/kegg/clustering/',
+                cutoff=120,
+                )
 
 
-    def test_getConfiguration( self ):
+    def test_execute_analysis( self ):
 
-        self.cl.setConfigurationFile( './fixtures/clusperin.conf' )
-        expectedValue = '/var/kegg/clustering'
+        self.cl.execute_analysis()
 
-        result = self.cl.getConfiguration( 'clustering', 'ec_files' )
-
-        self.assertEquals( expectedValue, result )
-
-
-#    def test_createTrackingFile( self ):
-#
-#        self.cl.setConfigurationFile( './fixtures/anendb.conf' )
-#
-#        self.cl.createTrackingFile()
-#
-#
-#    def test_executeAnalysis( self ):
-#
-#        self.cl.setConfigurationFile( './fixtures/anendb.conf' )
-#
-#        self.cl.executeAnalysis()
-#
 
 
 
