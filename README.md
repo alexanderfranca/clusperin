@@ -27,6 +27,25 @@ EC_2.3.4.5.fasta
 **Notice** the file format: 'EC\_' **plus** your EC number **plus** '.fasta'
 
 
+## Metadata File
+
+**clusperin** will **generate automaticaly** a metadata file after finished its execution.
+
+That's a crucial file to identify the clustering process and it'll be used as a source of information to other packages that imports clustering results.
+
+The file name is 'clustering_metadata', it's stored at the clustering results directory, and an example can be seen below:
+
+```
+label = the_name_of_the_process 
+author = who executed the process 
+cutoff = 300
+clusters = /var/clustering/clusters/
+fasta_origin = /var/clustering/
+software = blast
+date = 2017-06-29 14:39:49.578512
+```
+
+
 ## Installing
 
 * Download (and extract) the zip file from this repository or clone it using **git** command.
