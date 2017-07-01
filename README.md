@@ -27,10 +27,6 @@ EC_2.3.4.5.fasta
 **Notice** the file format: 'EC\_' **plus** your EC number **plus** '.fasta'
 
 
-## Requirements
-
-* BLAST software: Download: ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/. That's the software that actual make the similarity analysis.
-
 ## Installing
 
 * Download (and extract) the zip file from this repository or clone it using **git** command.
