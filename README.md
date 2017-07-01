@@ -47,10 +47,15 @@ python setup.py install
 **Example:**
 
 ```
-clusperin --source-directory=/var/clustering/ --destination-directory=/var/clustering/clusters/ --label=any_name_you_want --author=your_name --cutoff=300 --log-file=/var/log/clusperin.log
+clusperin --source-directory=/var/clustering/ \
+          --destination-directory=/var/clustering/clusters/ \
+          --label=any_name_you_want \
+          --author=your_name \
+          --cutoff=300 \ 
+          --log-file=/var/log/clusperin.log
 ```
 
-* Explaining the parameters:
+## Explaining the parameters
 
 * --source-directory
 
