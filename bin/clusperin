@@ -13,22 +13,14 @@ parseargs.add_argument('--author', help="Author's name for this clustering.", re
 parseargs.add_argument('--log-file', help="Full path (including the file name) to the log file.", required=True)
 args = parseargs.parse_args()
 
-if not os.access(args.log_file, os.W_OK):
-    print( "ERROR: You don't have permission to write the file: " + args.log_file )
-    sys.exit()
 
-if not os.access(args.source_directory, os.R_OK):
-    print( "ERROR: You don't have permission to read the directory: " + args.source_directory)
-    sys.exit()
+try:
+    from clusperin import *
 
-if not os.access(args.destination_directory, os.W_OK):
-    print( "ERROR: You don't have permission to write into the directory OR the directory doesn't exist: " + args.destination_directory)
-    sys.exit()
+    c = Clusperin(args.source_directory, args.destination_directory, args.cutoff, args.label, args.author, args.log_file)
 
+    # Execute the clustering.
+    c.execute_analysis()
 
-from clusperin import *
-
-c = Clusperin(args.source_directory, args.destination_directory, args.cutoff, args.label, args.author, args.log_file)
-
-# Execute the clustering.
-c.execute_analysis()
+except Exception as e:
+    raise (Exception(f"Not able to cluster."))
