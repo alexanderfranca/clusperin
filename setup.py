@@ -15,11 +15,7 @@ setup(
     packages=[ 'clusperin' ],
     platforms='Linux',
     url='http://bioinfoteam.fiocruz.br/clusperin',
-    install_requires=[
-            'configparser',
-            'datetime ',
-            'pprint',
-            ],
+    install_requires=[ ],
 )
 
 
