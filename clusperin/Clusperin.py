@@ -54,7 +54,7 @@ class Clusperin():
 
         self.log.info("START ANALYSIS.")
 
-        self.log.info("EC files are in: " + self.destination_directory)
+        self.log.info("EC files are in: " + self.source_directory)
 
         if not os.path.isdir(self.destination_directory):
             os.mkdir(self.destination_directory)
@@ -74,7 +74,7 @@ class Clusperin():
 
         done_files = self.done_files_list()
 
-        files = glob.glob( self.source_directory + '/' + '*.fasta' )
+        files = glob.glob( self.source_directory + '/' + '*.blastall' )
 
         self.total_of_files = len(files)
 
@@ -133,7 +133,7 @@ class Clusperin():
 
         """
 
-        blast_result_file_name = fasta_file + '.blastall'
+        blast_result_file_name = fasta_file
 
         blast_csv = open(blast_result_file_name)
         blastall_result_file_csv = csv.reader( blast_csv , delimiter='\t' )
